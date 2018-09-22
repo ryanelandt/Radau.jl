@@ -8,20 +8,23 @@ include("radau_struct.jl")
 include("radau_functions.jl")
 
 export
-# radau_struct.jl
-RadauIntegrator,
-makeRadauIntegrator,
+    # radau_struct.jl
+    RadauIntegrator,
+    # RadauTable,
 
-# radau_functions.jl
-calcJacobian!,
-updateInvC!,
-initializeX!,
-zeroFill!,
-updateFX!,
-calcEw!,
-updateStageX!,
-solveRadauDefault,
-RadauTable,
-solveRadauFast
+    # # radau_functions.jl
+    solveRadau,
+    # calcJacobian!,
+    # updateInvC!,
+    # initializeX!,
+    # zeroFill!,
+    # updateFX!,
+    # calcEw!,
+    # updateStageX!,
+    # solveRadauDefault,
+
+    # radau_utilities.jl
+    makeRadauIntegrator
+
 
 end
