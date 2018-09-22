@@ -6,6 +6,8 @@ using LinearAlgebra
 
 include("radau_struct.jl")
 include("radau_functions.jl")
+include("radau_utilities.jl")
+
 
 export
     # radau_struct.jl
