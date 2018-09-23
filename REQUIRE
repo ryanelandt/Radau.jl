@@ -1,2 +1,3 @@
-StaticArrays
-ForwardDiff
+julia 1.0
+StaticArrays 0.8.2
+ForwardDiff 0.9.0
