@@ -7,26 +7,17 @@ using LinearAlgebra
 
 include("radau_struct.jl")
 include("radau_functions.jl")
-include("radau_solve.jl")
 include("radau_utilities.jl")
+include("radau_solve.jl")
 
 
 export
     # radau_struct.jl
     RadauIntegrator,
-    # RadauTable,
-
-    # # radau_functions.jl
-    solveRadau,
-    # calcJacobian!,
-    # updateInvC!,
-    # initializeX!,
-    # zeroFill!,
-    # updateFX!,
-    # calcEw!,
-    # updateStageX!,
-    # solveRadauDefault,
 
     # radau_utilities.jl
     makeRadauIntegrator
+
+    # radau_solve.jl
+    solveRadau,
 end
