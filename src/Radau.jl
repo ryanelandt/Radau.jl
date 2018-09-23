@@ -16,8 +16,8 @@ export
     RadauIntegrator,
 
     # radau_utilities.jl
-    makeRadauIntegrator
+    makeRadauIntegrator,
 
     # radau_solve.jl
-    solveRadau,
+    solveRadau
 end
