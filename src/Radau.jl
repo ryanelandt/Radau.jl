@@ -4,8 +4,10 @@ using ForwardDiff
 using StaticArrays
 using LinearAlgebra
 
+
 include("radau_struct.jl")
 include("radau_functions.jl")
+include("radau_solve.jl")
 include("radau_utilities.jl")
 
 
@@ -27,6 +29,4 @@ export
 
     # radau_utilities.jl
     makeRadauIntegrator
-
-
 end

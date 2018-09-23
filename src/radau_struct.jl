@@ -1,21 +1,3 @@
-struct RadauIntegrator{T_object, N, n_stage_max}
-    table::NTuple{n_stage_max, RadauTable}
-    h::MVector{1, Float64}
-    inv_h::MVector{1, Float64}
-    tol::Float64
-    cv::RadauVectorCache{n_stage_max, N}
-    ct::RadauCacheTuple{n_stage_max, N}
-    de_object::T_object
-    function RadauIntegrator{T_object_, N, n_stage_max_}(tol::Float64, de_object_::T_object_) where {T_object_, N, n_stage_max_}
-        table_ = Tuple([RadauTable{k}() for k = 1:3])
-        h_mv = MVector{1, Float64}(NaN)
-        inv_h_mv = MVector{1, Float64}(NaN)
-        cv_ = RadauVectorCache{n_stage_max_, N}()
-        ct_ = RadauCacheTuple{n_stage_max_, N}()
-        return new(table_, h_mv, inv_h_mv, tol, cv_, ct_, de_object_)
-    end
-end
-
 struct RadauVectorCache{n_stage, N}
     seed::NTuple{N, ForwardDiff.Partials{N, Float64}}
     store_float::Vector{Float64}
@@ -92,5 +74,23 @@ struct RadauTable{n_stage}
         lambda_, T_ = eigen(inv_A_)
         inv_T_ = inv(T_)
         return new(A_, c_, inv_A_, lambda_, T_, inv_T_)
+    end
+end
+
+struct RadauIntegrator{T_object, N, n_stage_max}
+    table::NTuple{n_stage_max, RadauTable}
+    h::MVector{1, Float64}
+    inv_h::MVector{1, Float64}
+    tol::Float64
+    cv::RadauVectorCache{n_stage_max, N}
+    ct::RadauCacheTuple{n_stage_max, N}
+    de_object::T_object
+    function RadauIntegrator{T_object_, N, n_stage_max_}(tol::Float64, de_object_::T_object_) where {T_object_, N, n_stage_max_}
+        table_ = Tuple([RadauTable{k}() for k = 1:3])
+        h_mv = MVector{1, Float64}(NaN)
+        inv_h_mv = MVector{1, Float64}(NaN)
+        cv_ = RadauVectorCache{n_stage_max_, N}()
+        ct_ = RadauCacheTuple{n_stage_max_, N}()
+        return new(table_, h_mv, inv_h_mv, tol, cv_, ct_, de_object_)
     end
 end
