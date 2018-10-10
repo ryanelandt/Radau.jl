@@ -3,16 +3,16 @@ struct RadauVectorCache{n_stage, N}
     store_float::Vector{Float64}
     store_complex::Vector{ComplexF64}
     neg_J::Matrix{Float64}
-    x_dual::Vector{ForwardDiff.Dual{Float64,Float64,N}}
-    xx_dual::Vector{ForwardDiff.Dual{Float64,Float64,N}}
+    x_dual::Vector{ForwardDiff.Dual{Nothing,Float64,N}}
+    xx_dual::Vector{ForwardDiff.Dual{Nothing,Float64,N}}
     xx_0::Vector{Float64}
     function RadauVectorCache{n_stage_, N}() where {n_stage_, N}
         seed_  = ForwardDiff.construct_seeds(ForwardDiff.Partials{N,Float64})
         store_float_ = Vector{Float64}(undef, N)
         store_complex_ = Vector{ComplexF64}(undef, N)
         neg_J_ = Matrix{Float64}(undef, N, N)
-        x_dual_ = Vector{ForwardDiff.Dual{Float64,Float64,N}}(undef, N)
-        xx_dual_ = Vector{ForwardDiff.Dual{Float64,Float64,N}}(undef, N)
+        x_dual_ = Vector{ForwardDiff.Dual{Nothing,Float64,N}}(undef, N)
+        xx_dual_ = Vector{ForwardDiff.Dual{Nothing,Float64,N}}(undef, N)
         xx_0_ = Vector{Float64}(undef, N)
         return new(seed_, store_float_, store_complex_, neg_J_, x_dual_, xx_dual_, xx_0_)
     end
@@ -64,6 +64,8 @@ struct RadauTable{n_stage}
                 A[3, :] = v3
                 A = SMatrix{radau_rule, radau_rule, Float64, radau_rule * radau_rule}(A...)
                 c = (sum(v1), sum(v2), sum(v3))
+            else
+                error("NOT IMPLEMENTED: RadauIIA rule with $radau_rule stages (order $(2*radau_rule - 1))")
             end
             return A, c
         end
