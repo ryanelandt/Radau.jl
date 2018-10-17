@@ -33,18 +33,18 @@ end
 function calcEw!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
     residual = 0.0
     for i = 1:n_stage
-        # rr.cv.store_float .= rr.ct.X_stage[i] - x0 - rr.h * sum( rr.A[i, j] * rr.ct.F_X_stage[j])
+        # rr.cv.store_float .= rr.ct.X_stage[i] - x0 - rr.step.h * sum( rr.A[i, j] * rr.ct.F_X_stage[j])
         LinearAlgebra.BLAS.blascopy!(N, rr.ct.X_stage[i], 1, rr.cv.store_float, 1)
         LinearAlgebra.BLAS.axpy!(-1.0, x0, rr.cv.store_float)
         for j = 1:n_stage
-            coefficient = -rr.h[1] * table.A[i, j]
+            coefficient = -rr.step.h * table.A[i, j]
             # rr.cv.store_float .-= (rr.h * rr.A[i, j]) * rr.ct.F_X_stage[j]
             LinearAlgebra.BLAS.axpy!(coefficient, rr.ct.F_X_stage[j], rr.cv.store_float)
         end
         residual += dot(rr.cv.store_float, rr.cv.store_float)
         for j = 1:n_stage
-            # rr.ct.Ew_stage[j] .+= (rr.inv_h * rr.λ[j] * rr.inv_T[j, i]) * rr.cv.store_float
-            coefficient = rr.inv_h[1] * table.λ[j] * table.inv_T[j, i]
+            # rr.ct.Ew_stage[j] .+= (rr.step.h⁻¹ * rr.λ[j] * rr.inv_T[j, i]) * rr.cv.store_float
+            coefficient = rr.step.h⁻¹[1] * table.λ[j] * table.inv_T[j, i]
             LinearAlgebra.BLAS.axpy!(coefficient, rr.cv.store_float, rr.ct.Ew_stage[j])
         end
     end
@@ -54,7 +54,7 @@ function updateInvC!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::Radau
     for i = 1:n_stage
         rr.ct.inv_C_stage[i] .= rr.cv.neg_J
         for k = 1:N
-            rr.ct.inv_C_stage[i][k, k] += rr.inv_h[1] * table.λ[i]
+            rr.ct.inv_C_stage[i][k, k] += rr.step.h⁻¹[1] * table.λ[i]
         end
         ### NOTE: Negative sign taken care of when update X_stage ###
         _, ipiv, info = LinearAlgebra.LAPACK.getrf!(rr.ct.inv_C_stage[i])  # rr.cv.store_complex .= - inv(rr.cv.C) * rr.ct.Ew_stage[i]

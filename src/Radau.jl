@@ -26,6 +26,7 @@ export
 
     # radau_struct.jl
     RadauIntegrator,
+    RadauTable,
 
     # radau_utilities.jl
     makeRadauIntegrator,

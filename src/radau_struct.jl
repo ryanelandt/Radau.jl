@@ -66,20 +66,37 @@ struct RadauTable{n_stage}
     end
 end
 
+mutable struct RadauStep
+    h⁻¹::Float64
+    h::Float64
+    tol_a::Float64
+    tol_r::Float64
+    tol_newton::Float64
+    is_has_prev_step::Bool
+    hᵏ⁻¹::Float64
+    x_errᵏ::Float64
+    x_errᵏ⁺¹::Float64
+    function RadauStep(;tol_a=1.0e-4, tol_r=1.0e-4, tol_newton=1.0e-16)
+        return new(NaN, NaN, tol_a, tol_r, tol_newton, false, NaN, NaN, NaN)
+    end
+end
+
 struct RadauIntegrator{T_object, N, n_stage_max}
     table::NTuple{n_stage_max, RadauTable}
-    h::MVector{1, Float64}
-    inv_h::MVector{1, Float64}
-    tol::Float64
+    # h::MVector{1, Float64}
+    # inv_h::MVector{1, Float64}
+    # tol::Float64
+    step::RadauStep
     cv::RadauVectorCache{n_stage_max, N}
     ct::RadauCacheTuple{n_stage_max, N}
     de_object::T_object
     function RadauIntegrator{T_object_, N, n_stage_max_}(tol::Float64, de_object_::T_object_) where {T_object_, N, n_stage_max_}
         table_ = Tuple([RadauTable{k}() for k = 1:3])
-        h_mv = MVector{1, Float64}(NaN)
-        inv_h_mv = MVector{1, Float64}(NaN)
+        # h_mv = MVector{1, Float64}(NaN)
+        # inv_h_mv = MVector{1, Float64}(NaN)
         cv_ = RadauVectorCache{n_stage_max_, N}()
         ct_ = RadauCacheTuple{n_stage_max_, N}()
-        return new(table_, h_mv, inv_h_mv, tol, cv_, ct_, de_object_)
+        radau_step = RadauStep(tol_newton=tol)
+        return new(table_, radau_step, cv_, ct_, de_object_)
     end
 end
