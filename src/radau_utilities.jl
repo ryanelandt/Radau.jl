@@ -9,7 +9,7 @@ function put_real_eigenvalue_first(λ::Vector{Complex{BigFloat}}, T::Matrix{Comp
         return λ, T
     else
         n = length(λ)
-        perm_mat = diagm(1=>ones(n-1), -2=>ones(1))
+        perm_mat = diagm(1=>ones(n-1), (1-n)=>ones(1))
         λ_mat = diagm(0=>λ)
         λ_perm_order = Int64.(collect(1:n)' * perm_mat)[:]
         λ_perm = λ[λ_perm_order]
