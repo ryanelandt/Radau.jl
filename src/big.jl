@@ -9,5 +9,6 @@ function big_eigen(M::Matrix{BigFloat})
         sss = svd(M - I*λ[k])  # I'm aware this is massivly ineffecient
         T[:, k] = sss.Vt[end, :]'   # this does conjugate transpose
     end
+    λ, T = put_real_eigenvalue_first(λ, T)
     return λ, T
 end

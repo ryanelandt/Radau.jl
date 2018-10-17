@@ -10,7 +10,7 @@ function make_vandermonte_real(c::Vector{T}) where {T}
     return V
 end
 
-function find_real_eigenvalue(A)
+function find_real_eigenvalue(A::Matrix{BigFloat})
     n, _ = size(A)
     isodd(n) || error("A needs to be odd sized")
     ev = eigvals(A)

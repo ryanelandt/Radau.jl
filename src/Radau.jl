@@ -29,6 +29,7 @@ export
 
     # radau_utilities.jl
     makeRadauIntegrator,
+    put_real_eigenvalue_first,
 
     # radau_solve.jl
     solveRadau
