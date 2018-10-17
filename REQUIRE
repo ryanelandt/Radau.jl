@@ -4,3 +4,4 @@ ForwardDiff 0.9.0
 Polynomials 0.5.1
 PolynomialRoots 0.2.0
 GenericLinearAlgebra 0.0.0
+GenericSVD 0.2.0
