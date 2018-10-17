@@ -5,8 +5,8 @@ using StaticArrays
 using LinearAlgebra
 using Polynomials: Poly, polyval, polyder, coeffs
 using PolynomialRoots: roots
-using GenericLinearAlgebra
-using GenericSVD
+using GenericLinearAlgebra: eigvals
+using GenericSVD: svd
 
 
 include("big.jl")

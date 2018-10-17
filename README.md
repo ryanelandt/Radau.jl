@@ -18,7 +18,7 @@ Example with code:
 
 ```Julia
 struct SimpleStiffSystem
-    lambda::Float64
+    λ::Float64
     de::Function
     function SimpleStiffSystem(de::Function)
         return new(1.0, de)
@@ -26,7 +26,7 @@ struct SimpleStiffSystem
 end
 
 function stiff_de!(xx::Vector{T}, x::Vector{T}, s::SimpleStiffSystem) where {T}
-    xx .= -s.lambda * x
+    xx .= -s.λ * x
     return nothing
 end
 ```

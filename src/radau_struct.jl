@@ -38,11 +38,13 @@ struct RadauTable{n_stage}
     A::Matrix{Float64}
     c::NTuple{n_stage,Float64}
     inv_A::Matrix{Float64}
-    lambda::Vector{ComplexF64}
+    λ::Vector{ComplexF64}
     T::Matrix{ComplexF64}
     inv_T::Matrix{ComplexF64}
+    bi::Matrix{Float64}
+    b̂::Vector{Float64}
+    b̂_0::Float64
     function RadauTable{n_stage_}() where {n_stage_}
-        # function outputRadauRuleMatrix(radau_rule::Int64)
         (0 <= n_stage_) || error("radau_rule stage number needs to be positive, but is $radau_rule")
         (n_stage_ <= 7) || error("are you sure that you want a RadauIIA rule with $radau_rule stages (order $(2*radau_rule - 1))?")
 
@@ -60,46 +62,7 @@ struct RadauTable{n_stage}
 
         c = Tuple(c)
 
-        A_ = A
-        c_ = c
-        inv_A_ = inv_A
-        lambda_ = λ
-        T_ = T
-        inv_T_ = inv_T
-
-        #     if radau_rule == 1
-        #         A = SMatrix{radau_rule, radau_rule, Float64, radau_rule * radau_rule}(1)
-        #         c = (1.0, )
-        #     elseif radau_rule == 2
-        #         v1 = SVector{2, Float64}(5/12, -1/12)
-        #         v2 = SVector{2, Float64}(3/4, 1/4)
-        #         A = Matrix{Float64}(I,radau_rule,radau_rule)
-        #         A[1, :] = v1
-        #         A[2, :] = v2
-        #         A = SMatrix{radau_rule, radau_rule, Float64, radau_rule * radau_rule}(A)
-        #         c = (sum(v1), sum(v2))
-        #     elseif radau_rule == 3
-        #         v1 = SVector{3, Float64}(11/45 - 7*sqrt(6)/360, 37/225 - 169 * sqrt(6) / 1800, -2/225 + sqrt(6) / 75)
-        #         v2 = SVector{3, Float64}(37/225 + 169*sqrt(6) / 1800, 11/45 + 7 * sqrt(6) / 360, -2/225 - sqrt(6)/75)
-        #         v3 = SVector{3, Float64}(4/9 - sqrt(6)/36, 4/9 + sqrt(6)/36, 1/9)
-        #         A = Matrix{Float64}(I,radau_rule,radau_rule)
-        #         A[1, :] = v1
-        #         A[2, :] = v2
-        #         A[3, :] = v3
-        #         A = SMatrix{radau_rule, radau_rule, Float64, radau_rule * radau_rule}(A...)
-        #         c = (sum(v1), sum(v2), sum(v3))
-        #     else
-        #         error("NOT IMPLEMENTED: RadauIIA rule with $radau_rule stages (order $(2*radau_rule - 1))")
-        #     end
-        #     return A, c
-        # end
-        #
-        # A_mat, c_ = outputRadauRuleMatrix(n_stage_)
-        # A_ = Matrix(A_mat)
-        # inv_A_ = inv(A_)
-        # lambda_, T_ = eigen(inv_A_)
-        # inv_T_ = inv(T_)
-        return new(A_, c_, inv_A_, lambda_, T_, inv_T_)
+        return new(A, c, inv_A, λ, T, inv_T, bi, b̂[2:end], b̂[1])
     end
 end
 

@@ -1,5 +1,5 @@
 struct SimpleStiffSystem
-    lambda::Float64
+    λ::Float64
     de::Function
     function SimpleStiffSystem(de::Function)
         return new(1.0, de)
@@ -7,7 +7,7 @@ struct SimpleStiffSystem
 end
 
 function stiff_de!(xx::Vector{T}, x::Vector{T}, s::SimpleStiffSystem) where {T}
-    xx .= -s.lambda * x
+    xx .= -s.λ * x
     return nothing
 end
 
@@ -21,7 +21,7 @@ n_stage = 3
 t_final = 0.2
 is_converge, k_iter, res, x_final = solveRadau(rr_, xx0, t_final, n_stage)
 x_ana = exp(-t_final)
-# is_ = x_ana ≈ x_final[1]
+
 
 @testset "basic_test" begin
     @test x_ana ≈ x_final[1]
