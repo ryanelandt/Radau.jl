@@ -15,7 +15,7 @@ function solveRadau_inner(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vec
         x_final = get_X_final(rr, table)
         return rr.step.hᵏ⁻¹, x_final  # step actually taken, x_final
     else
-        if rr.step.h < 1.0e-8  # TODO: make this user-determined
+        if rr.step.h < rr.step.h_min
             error("time step is too small, something is wrong")
         else
             table = get_table_from_current_s(rr)  # need to get new table because s may have changed
