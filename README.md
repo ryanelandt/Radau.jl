@@ -10,6 +10,13 @@ Radau methods are implicit collocation methods that used to integrate stiff diff
 Implementations of implicit integrators require a Jacobian to solve the stage values.
 This package was primary written to integrate multi-rigid-body dynamics with soft-contact (i.e. state-dependent contact forces).
 
+### Current features
+- Adaptive order
+- Adaptive time-step
+
+### Future features
+- Dense output
+
 ### Using 'Radau.jl'
 This implementation of Radau requires a structure with field named `de` than contains a differential equation that takes three inputs explained in this paragraph.
 The differential equation takes a state vector `x` and writes the derivative of this state vector to an output vector `xx`.
