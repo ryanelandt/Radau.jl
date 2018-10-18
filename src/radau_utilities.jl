@@ -1,4 +1,5 @@
 makeRadauIntegrator(N::Int64, tol::Float64, de_object::T_object) where {T_object} = RadauIntegrator{T_object, N, 3}(tol, de_object)
+makeRadauIntegrator(x0::Vector{Float64}, tol::Float64, de_object::T_object) where {T_object} = makeRadauIntegrator(length(x0), tol, de_object)
 
 put_real_eigenvalue_first(λ, T) = put_real_eigenvalue_first(λ, T, 0)
 function put_real_eigenvalue_first(λ::Vector{Complex{BigFloat}}, T::Matrix{Complex{BigFloat}}, n_attempt::Int64)
@@ -18,3 +19,9 @@ function put_real_eigenvalue_first(λ::Vector{Complex{BigFloat}}, T::Matrix{Comp
         return put_real_eigenvalue_first(λ_perm, T_perm, n_attempt + 1)
     end
 end
+
+function get_X_final(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}) where {n_stage, n_stage_max, N, T_object}
+    return rr.ct.X_stage[n_stage] * 1.0
+end
+
+get_exponent(table::RadauTable{n_stage}) where {n_stage} = 1 / (1 + n_stage)

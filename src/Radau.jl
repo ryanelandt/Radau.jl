@@ -15,6 +15,7 @@ include("radau_struct.jl")
 include("radau_functions.jl")
 include("radau_utilities.jl")
 include("radau_solve.jl")
+include("adaptive.jl")
 
 export
     # big.jl
@@ -27,11 +28,34 @@ export
     # radau_struct.jl
     RadauIntegrator,
     RadauTable,
+    RadauStep,
+    RadauOrder,
+
+    # radau_functions.jl
+    calcJacobian!,
+    updateInvC!,
+    initializeX!,
+    zeroFill!,
+    updateFX!,
+    calcEw!,
+    updateStageX!,
 
     # radau_utilities.jl
     makeRadauIntegrator,
     put_real_eigenvalue_first,
+    get_X_final,
+    get_exponent,
 
     # radau_solve.jl
-    solveRadau
+    solveRadau,
+
+    # adaptive.jl
+    calc_x̂_minus_x,
+    calc_x_err_norm,
+    update_x_err_norm!,
+    calc_h_new,
+    update_h!,
+    calc_h_new_estimate_1,
+    predictive_correction
+
 end
