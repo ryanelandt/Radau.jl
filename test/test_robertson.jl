@@ -30,6 +30,7 @@ initial_h = 1.0e-4
 rr = makeRadauIntegrator(x0, 1.0e-16, my_stiff_struct)
 update_h!(rr, initial_h)  # force it to start with h = 1.0e-4
 rr.order.s = 3  # force it to start with Radau5
+rr.step.h_max = Inf  # don't want timesteps truncated
 n_steps = 10
 
 xx = [x0]  # to avoid putting the loop in a function

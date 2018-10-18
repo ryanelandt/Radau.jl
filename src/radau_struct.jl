@@ -76,8 +76,9 @@ mutable struct RadauStep
     hᵏ⁻¹::Float64
     x_err_norm::Float64
     x_err_normᵏ⁺¹::Float64
+    h_max::Float64
     function RadauStep(;h=1.0e-4, tol_a=1.0e-4, tol_r=1.0e-4, tol_newton=1.0e-16)
-        return new(h, 1 / h, tol_a, tol_r, tol_newton, false, -9999.0, -9999.0, -9999.0)
+        return new(h, 1 / h, tol_a, tol_r, tol_newton, false, -9999.0, -9999.0, -9999.0, 0.01)
     end
 end
 
@@ -97,9 +98,6 @@ end
 
 struct RadauIntegrator{T_object, N, n_stage_max}
     table::NTuple{n_stage_max, RadauTable}
-    # h::MVector{1, Float64}
-    # inv_h::MVector{1, Float64}
-    # tol::Float64
     step::RadauStep
     order::RadauOrder
     cv::RadauVectorCache{n_stage_max, N}
@@ -107,8 +105,6 @@ struct RadauIntegrator{T_object, N, n_stage_max}
     de_object::T_object
     function RadauIntegrator{T_object_, N, n_stage_max_}(tol::Float64, de_object_::T_object_) where {T_object_, N, n_stage_max_}
         table_ = Tuple([RadauTable{k}() for k = 1:3])
-        # h_mv = MVector{1, Float64}(NaN)
-        # inv_h_mv = MVector{1, Float64}(NaN)
         cv_ = RadauVectorCache{n_stage_max_, N}()
         ct_ = RadauCacheTuple{n_stage_max_, N}()
         radau_step = RadauStep(tol_newton=tol)

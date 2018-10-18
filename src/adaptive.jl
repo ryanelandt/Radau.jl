@@ -69,11 +69,14 @@ function calc_h_new(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n
             rr.step.is_has_prev_step = true
             h_new = h_est¹
         end
-        return min(h_new, 2 * rr.step.h)  # otherwise it will try to use numbers O(10.0-50.0) next time
+        # return min(h_new, 2 * rr.step.h)  # otherwise it will try to use numbers O(10.0-50.0) next time
     else  # failure
         rr.step.is_has_prev_step = false
-        return rr.step.h * 0.1  # drastically decrease time-step and return
+        # return rr.step.h * 0.1  # drastically decrease time-step and return
+        h_new = rr.step.h * 0.1
     end
+    # don't want to exceed maximum timestep or to increase timestep too quickly
+    return min(rr.step.h_max, 2 * rr.step.h, h_new)
 end
 
 function update_h!(rr::RadauIntegrator{TO, N, n_stage_max}, h_new::Float64) where {n_stage_max, N, TO}

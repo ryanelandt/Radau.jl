@@ -9,13 +9,13 @@ function solveRadau_inner(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vec
     is_converge = simple_newton(rr, x0, table)
     update_x_err_norm!(rr, table, x0)
     h_new = calc_h_new(rr, table, x0, is_converge)
-    update_h!(rr, h_new)
+    update_h!(rr, h_new)  # TODO: move this and the above line into one function
     update_order!(rr, is_converge)
     if is_converge
         x_final = get_X_final(rr, table)
         return rr.step.hᵏ⁻¹, x_final  # step actually taken, x_final
     else
-        if rr.step.h < 1.0e-8
+        if rr.step.h < 1.0e-8  # TODO: make this user-determined
             error("time step is too small, something is wrong")
         else
             table = get_table_from_current_s(rr)  # need to get new table because s may have changed
