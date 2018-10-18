@@ -25,3 +25,7 @@ function get_X_final(rr::RadauIntegrator{T_object, N, n_stage_max}, table::Radau
 end
 
 get_exponent(table::RadauTable{n_stage}) where {n_stage} = 1 / (1 + n_stage)
+
+@inline function get_table_from_current_s(rr::RadauIntegrator{T_object, N, n_stage_max}) where {n_stage_max, N, T_object}
+    return rr.table[rr.order.s]
+end

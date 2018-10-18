@@ -48,9 +48,16 @@ end
 function predictive_correction(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}) where {n_stage, n_stage_max, N, TO}
     # Implements second half of part of 8.25
 
-    ratio_h = rr.step.h / rr.step.hᵏ⁻¹
-    ratio_x_err_norm = rr.step.x_err_norm / rr.step.x_err_normᵏ⁺¹
-    return ratio_h * (ratio_x_err_norm)^get_exponent(table)
+    # an x_err_norm can be 0.0 if the equation is integratable EXACTLY
+    if 0.0 == rr.step.x_err_normᵏ⁺¹  # things went well let's keep it that way
+        return 1.0
+    elseif rr.step.x_err_norm == 0.0  # things got much much worse let's drastically reduce step size in anticipation
+        return 0.1
+    else
+        ratio_h = rr.step.h / rr.step.hᵏ⁻¹
+        ratio_x_err_norm = rr.step.x_err_norm / rr.step.x_err_normᵏ⁺¹
+        return ratio_h * (ratio_x_err_norm)^get_exponent(table)
+    end
 end
 
 function calc_h_new(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, is_converge::Bool) where {n_stage, n_stage_max, N, TO}
@@ -70,6 +77,7 @@ function calc_h_new(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n
 end
 
 function update_h!(rr::RadauIntegrator{TO, N, n_stage_max}, h_new::Float64) where {n_stage_max, N, TO}
+    (0.0 < h_new < Inf) || error("unacceptable h: $h_new")
     rr.step.hᵏ⁻¹ = rr.step.h
     rr.step.h    = h_new
     rr.step.h⁻¹  = 1 / h_new

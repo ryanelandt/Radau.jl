@@ -8,7 +8,7 @@ end
 function solveRadau_inner(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}, table::RadauTable{n_stage}) where {n_stage_max, N, T_object, n_stage}
     is_converge = simple_newton(rr, x0, table)
     update_x_err_norm!(rr, table, x0)
-    (rr.step.x_err_normᵏ⁺¹ == 0.0) && error("rr.step.x_err_normᵏ⁺¹ == 0.0")
+    # (rr.step.x_err_normᵏ⁺¹ == 0.0) && error("rr.step.x_err_normᵏ⁺¹ == 0.0")
     h_new = calc_h_new(rr, table, x0, is_converge)
     update_h!(rr, h_new)
     update_order!(rr, is_converge)
@@ -19,8 +19,8 @@ function solveRadau_inner(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vec
         if rr.step.h < 1.0e-8
             error("time step is too small, something is wrong")
         else
-            # update_order!(rr, is_converge)
-            return solveRadau_inner(rr, x0)
+            table = get_table_from_current_s(rr)  # need to get new table because s may have changed
+            return solveRadau_inner(rr, x0, table)
         end
     end
 end
