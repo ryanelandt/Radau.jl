@@ -1,3 +1,4 @@
+
 struct SimpleStiffSystem
     λ::Float64
     de::Function
@@ -11,20 +12,17 @@ function stiff_de!(xx::Vector{T}, x::Vector{T}, s::SimpleStiffSystem) where {T}
     return nothing
 end
 
-a0 = SimpleStiffSystem(stiff_de!)
+my_stiff_struct = SimpleStiffSystem(stiff_de!)
 
-nn = 4
-xx0 = zeros(Float64, nn) .+ 1.0
-rr_ = makeRadauIntegrator(nn, 1.0e-16, a0)
-
-n_stage = 3
+x0 = zeros(Float64, 4) .+ 1.0
+rr = makeRadauIntegrator(x0, 1.0e-16, my_stiff_struct)
+rr.order.s = 3
 t_final = 0.2
-is_converge, k_iter, res, x_final = solveRadau(rr_, xx0, t_final, n_stage)
-x_ana = exp(-t_final)
+update_h!(rr, t_final)
 
+h, x_final = solveRadau(rr, x0)
+x_ana = exp(-t_final)
 
 @testset "basic_test" begin
     @test x_ana ≈ x_final[1]
-    @test is_converge
-    @test k_iter < 15
 end
