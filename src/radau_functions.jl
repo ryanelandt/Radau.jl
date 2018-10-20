@@ -1,4 +1,4 @@
-function calcJacobian!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+function calcJacobian!(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}) where {n_stage_max, N, T_object}
     ForwardDiff.seed!(rr.cv.x_dual, x0, rr.cv.seed)
     rr.de_object.de(rr.cv.xx_dual, rr.cv.x_dual, rr.de_object)
     for i = 1:N  # for each x

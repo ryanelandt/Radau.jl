@@ -64,12 +64,15 @@ end
 function calc_h_new(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, is_converge::Bool) where {n_stage, n_stage_max, N, TO}
     if is_converge
         h_est¹ = calc_h_new_estimate_1(rr, table)
-        if rr.step.is_has_prev_step
-            h_new = h_est¹ * min(1.0, predictive_correction(rr, table))  # conservative == good
-        else
-            rr.step.is_has_prev_step = true
-            h_new = h_est¹
-        end
+        h_new = h_est¹
+        
+        # if rr.step.is_has_prev_step
+        #     h_new = h_est¹ * min(1.0, predictive_correction(rr, table))  # conservative == good
+        # else
+        #     rr.step.is_has_prev_step = true
+        #     h_new = h_est¹
+        # end
+
         # return min(h_new, 2 * rr.step.h)  # otherwise it will try to use numbers O(10.0-50.0) next time
     else  # failure
         rr.step.is_has_prev_step = false

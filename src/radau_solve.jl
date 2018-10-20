@@ -1,7 +1,7 @@
 
 function solveRadau(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}) where {n_stage_max, N, T_object}
     table = rr.table[rr.order.s]
-    calcJacobian!(rr, table, x0)
+    calcJacobian!(rr, x0)
     return solveRadau_inner(rr, x0, table)
 end
 
@@ -40,9 +40,9 @@ function simple_newton(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector
         residual__ = calcEw!(rr, table, x0)
         updateStageX!(rr, table)
         (residual__ < rr.step.tol_newton) && (return true)
-        if 3 <= k_iter  # in practice: residual may get worse due to trivial seeding of guess
-            (residual_prev < residual__) && (return false)  # residual gets worse
-        end
+        # if 3 <= k_iter  # in practice: residual may get worse due to trivial seeding of guess
+            # (residual_prev < residual__) && (return false)  # residual gets worse
+        # end
         if k_iter != 1
             rr.order.θᵏ⁻¹ = rr.order.θ
             rr.order.θ = sqrt(residual__)
