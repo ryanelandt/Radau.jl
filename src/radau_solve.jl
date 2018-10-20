@@ -40,9 +40,13 @@ function simple_newton(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector
         residual__ = calcEw!(rr, table, x0)
         updateStageX!(rr, table)
         (residual__ < rr.step.tol_newton) && (return true)
-        (residual_prev < residual__) && (return false)  # residual gets worse
+        if 3 <= k_iter  # in practice: residual may get worse due to trivial seeding of guess
+            (residual_prev < residual__) && (return false)  # residual gets worse
+        end
         if k_iter != 1
-            rr.order.θᵏ⁻¹ = sqrt(rr.order.θ)
+            rr.order.θᵏ⁻¹ = rr.order.θ
+            rr.order.θ = sqrt(residual__)
+            # rr.order.θᵏ⁻¹ = sqrt(rr.order.θ)
             rr.order.Ψ_k = sqrt(rr.order.θᵏ⁻¹ * rr.order.θ)
         else
             rr.order.θ = sqrt(residual__)

@@ -56,7 +56,8 @@ function predictive_correction(rr::RadauIntegrator{TO, N, n_stage_max}, table::R
     else
         ratio_h = rr.step.h / rr.step.hᵏ⁻¹
         ratio_x_err_norm = rr.step.x_err_norm / rr.step.x_err_normᵏ⁺¹
-        return ratio_h * (ratio_x_err_norm)^get_exponent(table)
+        pred_corr = ratio_h * (ratio_x_err_norm)^get_exponent(table)
+        return clamp(pred_corr, 0.1, 1.0)  # otherwise prediction will be WAY too pessimistic
     end
 end
 
