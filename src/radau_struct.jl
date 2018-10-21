@@ -83,7 +83,6 @@ mutable struct RadauStep
     end
 end
 
-
 mutable struct RadauOrder
     s::Int64
     n_increase_cooldown::Int64
@@ -97,10 +96,22 @@ mutable struct RadauOrder
     end
 end
 
+mutable struct RadauDenseOutput{n_stage}
+    is_has_X::Bool
+    h::Float64
+    s::Int64
+    X_stage::NTuple{n_stage, Vector{Float64}}
+    function RadauDenseOutput{n_stage}(N) where {n_stage}
+        X_stage = Tuple(Vector{Float64}(undef, N) for _ = 1:n_stage)
+        return new(false, -9999.0, -9999, X_stage)
+    end
+end
+
 struct RadauIntegrator{T_object, N, n_stage_max}
     table::NTuple{n_stage_max, RadauTable}
     step::RadauStep
     order::RadauOrder
+    dense::RadauDenseOutput{n_stage_max}
     cv::RadauVectorCache{n_stage_max, N}
     ct::RadauCacheTuple{n_stage_max, N}
     de_object::T_object
@@ -110,6 +121,7 @@ struct RadauIntegrator{T_object, N, n_stage_max}
         ct_ = RadauCacheTuple{n_stage_max_, N}()
         radau_step = RadauStep(tol_newton=tol)
         radau_order = RadauOrder()
-        return new(table_, radau_step, radau_order, cv_, ct_, de_object_)
+        dense = RadauDenseOutput{n_stage_max_}(N)
+        return new(table_, radau_step, radau_order, dense, cv_, ct_, de_object_)
     end
 end

@@ -28,10 +28,12 @@ function simple_newton(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector
     # TODO: get rid of residual__ and replace with rr.order.θ
 
     updateInvC!(rr, table)
-    initializeX!(rr, table, x0)
+    # initialize_X!(rr, table, x0)  # this doesn't seem to help at all
+    initialize_X_with_X0!(rr, table, x0)
 
     residual_prev = Inf
     k_iter_max = rr.order.k_iter_max
+    res_vec = SVector{3,Float64}(Inf,Inf,Inf)
     for k_iter = 1:k_iter_max
         rr.order.k_iter = k_iter
         zeroFill!(rr.ct.Ew_stage, table)
@@ -39,20 +41,26 @@ function simple_newton(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector
         updateFX!(rr, table, x0)
         residual__ = calcEw!(rr, table, x0)
         updateStageX!(rr, table)
-        (residual__ < rr.step.tol_newton) && (return true)
-        # if 3 <= k_iter  # in practice: residual may get worse due to trivial seeding of guess
-            # (residual_prev < residual__) && (return false)  # residual gets worse
-        # end
+        if residual__ < rr.step.tol_newton
+            update_dense_successful!(rr, table)
+            return true
+        end
+
         if k_iter != 1
             rr.order.θᵏ⁻¹ = rr.order.θ
             rr.order.θ = sqrt(residual__)
-            # rr.order.θᵏ⁻¹ = sqrt(rr.order.θ)
             rr.order.Ψ_k = sqrt(rr.order.θᵏ⁻¹ * rr.order.θ)
         else
             rr.order.θ = sqrt(residual__)
             rr.order.Ψ_k = rr.order.θ
         end
         residual_prev = residual__  # update residual
+        res_vec = SVector{3,Float64}(residual__, res_vec[1], res_vec[2])
+        if res_vec[3] < res_vec[2] < res_vec[1]  # two consequitive issues
+            update_dense_unsuccessful!(rr)
+            return false
+        end
     end
+    update_dense_unsuccessful!(rr)
     return false  # exceeded iteration limit
 end

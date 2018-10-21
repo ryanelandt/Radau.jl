@@ -15,6 +15,7 @@ include("radau_struct.jl")
 include("radau_functions.jl")
 include("radau_utilities.jl")
 include("radau_solve.jl")
+include("interpolate.jl")
 include("adaptive.jl")
 
 export
@@ -56,6 +57,9 @@ export
     calc_h_new,
     update_h!,
     calc_h_new_estimate_1,
-    predictive_correction
+    predictive_correction,
+
+    # interpolate.jl
+    interpolate_output!
 
 end

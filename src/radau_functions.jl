@@ -17,13 +17,30 @@ function zeroFill!(tup_vec_in::NTuple{N, Vector{T}},  table::RadauTable{n_stage}
     end
     return nothing
 end
-function initializeX!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+
+# function initializeX!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+#     for i = 1:n_stage
+#         # rr.ct.X_stage[i] .= x0
+#         LinearAlgebra.BLAS.blascopy!(N, x0, 1, rr.ct.X_stage[i], 1)
+#     end
+#     return nothing
+# end
+
+function initialize_X!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+    if rr.dense.is_has_X
+        initialize_X_with_interp!(rr, table)
+    else
+        initialize_X_with_X0!(rr, table, x0)
+    end
+end
+
+function initialize_X_with_X0!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
     for i = 1:n_stage
-        # rr.ct.X_stage[i] .= x0
         LinearAlgebra.BLAS.blascopy!(N, x0, 1, rr.ct.X_stage[i], 1)
     end
     return nothing
 end
+
 function updateFX!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
     for i = 1:n_stage
         rr.de_object.de(rr.ct.F_X_stage[i], rr.ct.X_stage[i], rr.de_object)
