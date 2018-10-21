@@ -35,7 +35,6 @@ export
     # radau_functions.jl
     calcJacobian!,
     updateInvC!,
-    initializeX!,
     zeroFill!,
     updateFX!,
     calcEw!,
