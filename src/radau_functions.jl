@@ -1,30 +1,61 @@
-function calcJacobian!(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}) where {n_stage_max, N, T_object}
-    ForwardDiff.seed!(rr.cv.x_dual, x0, rr.cv.seed)
-    rr.de_object.de(rr.cv.xx_dual, rr.cv.x_dual, rr.de_object)
-    for i = 1:N  # for each x
+# function calcJacobian!(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}) where {n_stage_max, N, T_object}
+#     ForwardDiff.seed!(rr.cv.x_dual, x0, rr.cv.seed)
+#     rr.de_object.de(rr.cv.xx_dual, rr.cv.x_dual, rr.de_object)
+#     for i = 1:N  # for each x
+#         xx_dual_i = rr.cv.xx_dual[i]
+#         rr.cv.xx_0[i] = ForwardDiff.value(xx_dual_i)
+#         the_partials = ForwardDiff.partials(xx_dual_i)
+#         for j = 1:N  # for each x
+#             rr.cv.neg_J[i, j] = -the_partials[j]  ### the first dual is the partial of the first element wrt all partials ###
+#         end
+#     end
+#     return nothing
+# end
+
+function calcJacobian!(rr::RadauIntegrator{T_object,N,n_stage_max,NC}, x0::Vector{Float64}) where {n_stage_max, N, T_object, NC}
+    N_Loop, n_rem = divrem(N,NC)
+    (n_rem != 0) && (N_Loop += 1)
+    i_now = 1:NC
+    for k = 1:N_Loop
+        i_clamp = i_now[1]:min(i_now[end],N)
+        seed_indices!(rr.cv.x_dual, x0, i_clamp, rr.cv.seed)
+        rr.de_object.de(rr.cv.xx_dual, rr.cv.x_dual, rr.de_object)
+        write_indices!(rr, i_clamp)
+        i_now = i_now .+ NC
+    end
+    return nothing
+end
+
+function seed_indices!(duals::Vector{ForwardDiff.Dual{T,V,N}}, x::Vector{Float64}, index::UnitRange{Int64}, seed::NTuple{N,ForwardDiff.Partials{N,V}}) where {T,V,N}
+    duals .= x
+    i = 1
+    for k = index
+        duals[k] = ForwardDiff.Dual{T,V,N}(x[k], seed[i])
+        i += 1
+    end
+    return nothing
+end
+
+function write_indices!(rr::RadauIntegrator{T_object,N,n_stage_max,NC}, index::UnitRange{Int64}) where {n_stage_max,N,T_object,NC}
+    for i = 1:N
         xx_dual_i = rr.cv.xx_dual[i]
         rr.cv.xx_0[i] = ForwardDiff.value(xx_dual_i)
         the_partials = ForwardDiff.partials(xx_dual_i)
-        for j = 1:N  # for each x
-            rr.cv.neg_J[i, j] = -the_partials[j]  ### the first dual is the partial of the first element wrt all partials ###
+        k = 1
+        for j = index  # for each x
+            rr.cv.neg_J[i, j] = -the_partials[k]  ### the first dual is the partial of the first element wrt all partials ###
+            k += 1
         end
     end
     return nothing
 end
+
 function zeroFill!(tup_vec_in::NTuple{N, Vector{T}},  table::RadauTable{n_stage}) where {N, T, n_stage}
     for i = 1:n_stage
         fill!(tup_vec_in[i], zero(T))
     end
     return nothing
 end
-
-# function initializeX!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
-#     for i = 1:n_stage
-#         # rr.ct.X_stage[i] .= x0
-#         LinearAlgebra.BLAS.blascopy!(N, x0, 1, rr.ct.X_stage[i], 1)
-#     end
-#     return nothing
-# end
 
 function initialize_X!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
     if rr.dense.is_has_X

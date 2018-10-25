@@ -1,5 +1,11 @@
-makeRadauIntegrator(N::Int64, tol::Float64, de_object::T_object) where {T_object} = RadauIntegrator{T_object, N, 3}(tol, de_object)
-makeRadauIntegrator(x0::Vector{Float64}, tol::Float64, de_object::T_object) where {T_object} = makeRadauIntegrator(length(x0), tol, de_object)
+
+function makeRadauIntegrator(N::Int64, tol::Float64, de_object::T_object, NC::Int64) where {T_object}
+    return RadauIntegrator{T_object, N, 3, NC}(tol, de_object)
+end
+
+function makeRadauIntegrator(x0::Vector{Float64}, tol::Float64, de_object::T_object, NC::Int64) where {T_object}
+    return makeRadauIntegrator(length(x0), tol, de_object, NC)
+end
 
 put_real_eigenvalue_first(λ, T) = put_real_eigenvalue_first(λ, T, 0)
 function put_real_eigenvalue_first(λ::Vector{Complex{BigFloat}}, T::Matrix{Complex{BigFloat}}, n_attempt::Int64)

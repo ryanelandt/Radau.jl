@@ -1,6 +1,4 @@
 
-using Test
-
 @testset "λ T" begin
     for k = 1:7
         table = Radau.RadauTable{k}()

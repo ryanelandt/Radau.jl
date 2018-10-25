@@ -27,7 +27,7 @@ my_stiff_struct = RobertsonSystem(stiff_de!)
 x0 = [1.0, 0.0, 0.0]  # see Eq. 1.4
 initial_h = 1.0e-4
 
-rr = makeRadauIntegrator(x0, 1.0e-16, my_stiff_struct)
+rr = makeRadauIntegrator(x0, 1.0e-16, my_stiff_struct, 1)
 update_h!(rr, initial_h)  # force it to start with h = 1.0e-4
 rr.order.s = 3  # force it to start with Radau5
 rr.step.h_max = Inf  # don't want timesteps truncated
