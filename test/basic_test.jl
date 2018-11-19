@@ -7,7 +7,7 @@ struct SimpleStiffSystem
     end
 end
 
-function stiff_de!(xx::Vector{T}, x::Vector{T}, s::SimpleStiffSystem) where {T}
+function stiff_de!(xx::Vector{T}, x::Vector{T}, s::SimpleStiffSystem, t::Float64=0.0) where {T}
     xx .= -s.λ * x
     return nothing
 end

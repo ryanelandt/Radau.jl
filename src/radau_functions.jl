@@ -12,14 +12,14 @@
 #     return nothing
 # end
 
-function calcJacobian!(rr::RadauIntegrator{T_object,N,n_stage_max,NC}, x0::Vector{Float64}) where {n_stage_max, N, T_object, NC}
+function calcJacobian!(rr::RadauIntegrator{T_object,N,n_stage_max,NC}, x0::Vector{Float64}, t::Float64) where {n_stage_max, N, T_object, NC}
     N_Loop, n_rem = divrem(N,NC)
     (n_rem != 0) && (N_Loop += 1)
     i_now = 1:NC
     for k = 1:N_Loop
         i_clamp = i_now[1]:min(i_now[end],N)
         seed_indices!(rr.cv.x_dual, x0, i_clamp, rr.cv.seed)
-        rr.de_object.de(rr.cv.xx_dual, rr.cv.x_dual, rr.de_object)
+        rr.de_object.de(rr.cv.xx_dual, rr.cv.x_dual, rr.de_object, t)
         write_indices!(rr, i_clamp)
         i_now = i_now .+ NC
     end
@@ -72,9 +72,10 @@ function initialize_X_with_X0!(rr::RadauIntegrator{T_object, N, n_stage_max}, ta
     return nothing
 end
 
-function updateFX!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+function updateFX!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, t::Float64) where {n_stage, n_stage_max, N, T_object}
     for i = 1:n_stage
-        rr.de_object.de(rr.ct.F_X_stage[i], rr.ct.X_stage[i], rr.de_object)
+        time_stage = table.c[i] * rr.step.h + t
+        rr.de_object.de(rr.ct.F_X_stage[i], rr.ct.X_stage[i], rr.de_object, time_stage)
     end
     return nothing
 end

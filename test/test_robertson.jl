@@ -10,7 +10,7 @@ struct RobertsonSystem
     end
 end
 
-function stiff_de!(xx::Vector{T}, x::Vector{T}, s::RobertsonSystem) where {T}
+function stiff_de!(xx::Vector{T}, x::Vector{T}, s::RobertsonSystem, t::Float64=0.0) where {T}
     c1 = 0.04
     c2 = 1.0e4
     c3 = 3.0e7

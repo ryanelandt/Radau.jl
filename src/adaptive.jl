@@ -18,7 +18,7 @@ function calc_x_err_norm(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTa
 
     x_final = get_X_final(rr, table)
     term_sigma = 0.0
-    for k = 1:n_stage
+    for k = 1:N
         sc_k = rr.step.tol_a + max(abs(x_final[k]), abs(x0[k])) * rr.step.tol_r
         term_sigma += (x_err[k] / sc_k)^2
     end
@@ -65,7 +65,7 @@ function calc_h_new(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n
     if is_converge
         h_est¹ = calc_h_new_estimate_1(rr, table)
         h_new = h_est¹
-        
+
         # if rr.step.is_has_prev_step
         #     h_new = h_est¹ * min(1.0, predictive_correction(rr, table))  # conservative == good
         # else
