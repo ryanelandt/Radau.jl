@@ -101,19 +101,23 @@ function update_order!(rr::RadauIntegrator{T_object, N, n_stage_max}, is_converg
         cool = rr.order.n_increase_cooldown
         Ψ_k = rr.order.Ψ_k
         if cool < 1  # has the cooldown expired
-            if s == 1  # Radau1
-                if Ψ_k < 0.1  # convergence isn't terrible
-                    rr.order.s = 3  # Radau5
-                end
-            else
+            if Ψ_k < 0.1  # convergence isn't terrible
+                rr.order.s = min(rr.order.s + 2, rr.order.max_stage)  # up stages never going above max_stage
+                # if s == 1  # Radau1
+                #     if 3 <= rr.order.max_stage
+                #         rr.order.s = 3  # Radau5
+                #     end
+                # end
+            # else
                 # no higher order implemented yet so nothing to do yet
             end
         end
     else
-        if s != 1  # not Radau1
-            rr.order.s -= 2  # drop 2 stages
-        end
         rr.order.n_increase_cooldown = cooldown_reset
+        rr.order.s = max(rr.order.s - 2, 1)  # decrease stage number, but never below 1
+        # if s != 1  # not Radau1
+            # rr.order.s -= 2  # drop 2 stages
+        # end
     end
     (1 <= rr.order.s ) || error("something is wrong")
     return nothing

@@ -91,8 +91,9 @@ mutable struct RadauOrder
     k_iter::Int64
     k_iter_max::Int64
     Ψ_k::Float64
+    max_stage::Int64
     function RadauOrder()
-        return new(1, 10, -9999.0, -9999.0, -9999, 15, 9999.0)
+        return new(1, 10, -9999.0, -9999.0, -9999, 15, 9999.0, 3)
     end
 end
 
