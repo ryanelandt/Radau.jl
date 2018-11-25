@@ -1,6 +1,6 @@
 
 function solveRadau(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}, t::Float64=0.0) where {n_stage_max, N, T_object}
-    table = rr.table[rr.order.s]
+    table = rr.table[rr.rule.s]
     calcJacobian!(rr, x0, t)
     return solveRadau_inner(rr, x0, table, t)
 end
@@ -12,7 +12,7 @@ function solveRadau_inner(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vec
     update_x_err_norm!(rr, table, x0)
     h_new = calc_h_new(rr, table, x0, is_converge)
     update_h!(rr, h_new)  # TODO: move this and the above line into one function
-    update_order!(rr, is_converge)
+    update_rule!(rr, is_converge)
     if is_converge
         x_final = get_X_final(rr, table)
         h_taken = rr.step.hᵏ⁻¹
@@ -30,16 +30,16 @@ end
 function simple_newton(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}, table::RadauTable{n_stage},
         t::Float64=0.0) where {n_stage_max, N, T_object, n_stage}
 
-    # TODO: get rid of residual__ and replace with rr.order.θ
+    # TODO: get rid of residual__ and replace with rr.rule.θ
 
     updateInvC!(rr, table)
     initialize_X_with_X0!(rr, table, x0)
 
     residual_prev = Inf
-    k_iter_max = rr.order.k_iter_max
+    k_iter_max = rr.rule.k_iter_max
     res_vec = SVector{3,Float64}(Inf,Inf,Inf)
     for k_iter = 1:k_iter_max
-        rr.order.k_iter = k_iter
+        rr.rule.k_iter = k_iter
         zeroFill!(rr.ct.Ew_stage, table)
         zeroFill!(rr.ct.delta_Z_stage, table)
         updateFX!(rr, table, x0, t)
@@ -51,12 +51,12 @@ function simple_newton(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector
         end
 
         if k_iter != 1
-            rr.order.θᵏ⁻¹ = rr.order.θ
-            rr.order.θ = sqrt(residual__)
-            rr.order.Ψ_k = sqrt(rr.order.θᵏ⁻¹ * rr.order.θ)
+            rr.rule.θᵏ⁻¹ = rr.rule.θ
+            rr.rule.θ = sqrt(residual__)
+            rr.rule.Ψ_k = sqrt(rr.rule.θᵏ⁻¹ * rr.rule.θ)
         else
-            rr.order.θ = sqrt(residual__)
-            rr.order.Ψ_k = rr.order.θ
+            rr.rule.θ = sqrt(residual__)
+            rr.rule.Ψ_k = rr.rule.θ
         end
         residual_prev = residual__  # update residual
         res_vec = SVector{3,Float64}(residual__, res_vec[1], res_vec[2])

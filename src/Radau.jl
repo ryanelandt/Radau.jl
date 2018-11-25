@@ -1,16 +1,17 @@
 module Radau
 
+
 using ForwardDiff
 using StaticArrays
 using LinearAlgebra
-using Polynomials: Poly, polyval, polyder, coeffs
-using PolynomialRoots: roots
-using GenericLinearAlgebra: eigvals
-using GenericSVD: svd
+using DelimitedFiles
 
+# using Polynomials: Poly, polyval, polyder, coeffs
+# using PolynomialRoots: roots
+# using GenericLinearAlgebra: eigvals
+# using GenericSVD: svd
 
-include("big.jl")
-include("generate_butcher_table.jl")
+include("load_table_from_file.jl")
 include("radau_struct.jl")
 include("radau_functions.jl")
 include("radau_utilities.jl")
@@ -19,18 +20,15 @@ include("interpolate.jl")
 include("adaptive.jl")
 
 export
-    # big.jl
-    big_eigen,
+    # load_table_from_file.jl
 
-    # generate_butcher_table.jl
-    find_real_eigenvalue,
-    radau_butcher_table_plus,
+
 
     # radau_struct.jl
     RadauIntegrator,
     RadauTable,
     RadauStep,
-    RadauOrder,
+    RadauRule,
 
     # radau_functions.jl
     calcJacobian!,
@@ -42,7 +40,6 @@ export
 
     # radau_utilities.jl
     makeRadauIntegrator,
-    put_real_eigenvalue_first,
     get_X_final,
     get_exponent,
 

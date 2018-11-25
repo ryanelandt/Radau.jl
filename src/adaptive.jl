@@ -1,5 +1,5 @@
 
-function calc_x̂_minus_x(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+function calc_x̂_minus_x(rr::RadauIntegrator{T_object, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_rule_max, N, T_object}
     # Implements Eq. 8.17
 
     h = rr.step.h
@@ -12,8 +12,8 @@ function calc_x̂_minus_x(rr::RadauIntegrator{T_object, N, n_stage_max}, table::
     return x̂_minus_x
 end
 
-function calc_x_err_norm(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64},
-    x_err::Vector{Float64}) where {n_stage, n_stage_max, N, TO}
+function calc_x_err_norm(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64},
+    x_err::Vector{Float64}) where {n_stage, n_rule_max, N, TO}
     # Implements Eq 8.21 in Solving Ordinary Differential Equations II (Stiff and Differential-Algebraic Problems)
 
     x_final = get_X_final(rr, table)
@@ -25,7 +25,7 @@ function calc_x_err_norm(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTa
     return sqrt(term_sigma / N)
 end
 
-function update_x_err_norm!(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, TO}
+function update_x_err_norm!(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_rule_max, N, TO}
     rr.step.x_err_norm = rr.step.x_err_normᵏ⁺¹
     x̂_minus_x = calc_x̂_minus_x(rr, table, x0)
     x_err = rr.ct.inv_C_stage[1] * x̂_minus_x  # Eq. 8.19
@@ -34,18 +34,18 @@ function update_x_err_norm!(rr::RadauIntegrator{TO, N, n_stage_max}, table::Rada
     return nothing
 end
 
-function calc_h_new_estimate_1(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}) where {n_stage, n_stage_max, N, TO}
+function calc_h_new_estimate_1(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}) where {n_stage, n_rule_max, N, TO}
     #  Implements first half of part of 8.25
 
-    k_iter = rr.order.k_iter
-    two_k_max_iter = 2 * rr.order.k_iter_max
+    k_iter = rr.rule.k_iter
+    two_k_max_iter = 2 * rr.rule.k_iter_max
 
     fac = 0.9 * (two_k_max_iter + 1) / (two_k_max_iter + k_iter)
     term_1 = (1 / rr.step.x_err_normᵏ⁺¹)^get_exponent(table)
     return fac * rr.step.h * term_1
 end
 
-function predictive_correction(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}) where {n_stage, n_stage_max, N, TO}
+function predictive_correction(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}) where {n_stage, n_rule_max, N, TO}
     # Implements second half of part of 8.25
 
     # an x_err_norm can be 0.0 if the equation is integratable EXACTLY
@@ -61,7 +61,7 @@ function predictive_correction(rr::RadauIntegrator{TO, N, n_stage_max}, table::R
     end
 end
 
-function calc_h_new(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, is_converge::Bool) where {n_stage, n_stage_max, N, TO}
+function calc_h_new(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, is_converge::Bool) where {n_stage, n_rule_max, N, TO}
     if is_converge
         h_est¹ = calc_h_new_estimate_1(rr, table)
         h_new = h_est¹
@@ -83,7 +83,7 @@ function calc_h_new(rr::RadauIntegrator{TO, N, n_stage_max}, table::RadauTable{n
     return min(rr.step.h_max, 2 * rr.step.h, h_new)
 end
 
-function update_h!(rr::RadauIntegrator{TO, N, n_stage_max}, h_new::Float64) where {n_stage_max, N, TO}
+function update_h!(rr::RadauIntegrator{TO, N, n_rule_max}, h_new::Float64) where {n_rule_max, N, TO}
     (0.0 < h_new < Inf) || error("unacceptable h: $h_new")
     rr.step.hᵏ⁻¹ = rr.step.h
     rr.step.h    = h_new
@@ -91,34 +91,24 @@ function update_h!(rr::RadauIntegrator{TO, N, n_stage_max}, h_new::Float64) wher
     return nothing
 end
 
-function update_order!(rr::RadauIntegrator{T_object, N, n_stage_max}, is_converge::Bool) where {n_stage_max, N, T_object}
+function update_rule!(rr::RadauIntegrator{T_object, N, n_rule_max}, is_converge::Bool) where {n_rule_max, N, T_object}
     # Implements stategy on page 14 of "Stiff differential equations solved by Radau methods (Hairer)"
 
     cooldown_reset = 10
-    s = rr.order.s
+    s = rr.rule.s
     if is_converge
-        rr.order.n_increase_cooldown -= 1
-        cool = rr.order.n_increase_cooldown
-        Ψ_k = rr.order.Ψ_k
+        rr.rule.n_increase_cooldown -= 1
+        cool = rr.rule.n_increase_cooldown
+        Ψ_k = rr.rule.Ψ_k
         if cool < 1  # has the cooldown expired
             if Ψ_k < 0.1  # convergence isn't terrible
-                rr.order.s = min(rr.order.s + 2, rr.order.max_stage)  # up stages never going above max_stage
-                # if s == 1  # Radau1
-                #     if 3 <= rr.order.max_stage
-                #         rr.order.s = 3  # Radau5
-                #     end
-                # end
-            # else
-                # no higher order implemented yet so nothing to do yet
+                rr.rule.s = min(rr.rule.s + 1, rr.rule.max_rule)  # up rules never going above max_rule
             end
         end
     else
-        rr.order.n_increase_cooldown = cooldown_reset
-        rr.order.s = max(rr.order.s - 2, 1)  # decrease stage number, but never below 1
-        # if s != 1  # not Radau1
-            # rr.order.s -= 2  # drop 2 stages
-        # end
+        rr.rule.n_increase_cooldown = cooldown_reset
+        rr.rule.s = max(rr.rule.s - 1, 1)  # decrease rules number, but never below 1
     end
-    (1 <= rr.order.s ) || error("something is wrong")
+    (1 <= rr.rule.s ) || error("something is wrong")
     return nothing
 end

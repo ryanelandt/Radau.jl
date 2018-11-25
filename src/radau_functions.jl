@@ -1,18 +1,5 @@
-# function calcJacobian!(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}) where {n_stage_max, N, T_object}
-#     ForwardDiff.seed!(rr.cv.x_dual, x0, rr.cv.seed)
-#     rr.de_object.de(rr.cv.xx_dual, rr.cv.x_dual, rr.de_object)
-#     for i = 1:N  # for each x
-#         xx_dual_i = rr.cv.xx_dual[i]
-#         rr.cv.xx_0[i] = ForwardDiff.value(xx_dual_i)
-#         the_partials = ForwardDiff.partials(xx_dual_i)
-#         for j = 1:N  # for each x
-#             rr.cv.neg_J[i, j] = -the_partials[j]  ### the first dual is the partial of the first element wrt all partials ###
-#         end
-#     end
-#     return nothing
-# end
 
-function calcJacobian!(rr::RadauIntegrator{T_object,N,n_stage_max,NC}, x0::Vector{Float64}, t::Float64) where {n_stage_max, N, T_object, NC}
+function calcJacobian!(rr::RadauIntegrator{T_object,N,n_rule_max,NC}, x0::Vector{Float64}, t::Float64) where {n_rule_max, N, T_object, NC}
     N_Loop, n_rem = divrem(N,NC)
     (n_rem != 0) && (N_Loop += 1)
     i_now = 1:NC
@@ -36,7 +23,7 @@ function seed_indices!(duals::Vector{ForwardDiff.Dual{T,V,N}}, x::Vector{Float64
     return nothing
 end
 
-function write_indices!(rr::RadauIntegrator{T_object,N,n_stage_max,NC}, index::UnitRange{Int64}) where {n_stage_max,N,T_object,NC}
+function write_indices!(rr::RadauIntegrator{T_object,N,n_rule_max,NC}, index::UnitRange{Int64}) where {n_rule_max,N,T_object,NC}
     for i = 1:N
         xx_dual_i = rr.cv.xx_dual[i]
         rr.cv.xx_0[i] = ForwardDiff.value(xx_dual_i)
@@ -57,7 +44,7 @@ function zeroFill!(tup_vec_in::NTuple{N, Vector{T}},  table::RadauTable{n_stage}
     return nothing
 end
 
-function initialize_X!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+function initialize_X!(rr::RadauIntegrator{T_object, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_rule_max, N, T_object}
     if rr.dense.is_has_X
         initialize_X_with_interp!(rr, table)
     else
@@ -65,21 +52,21 @@ function initialize_X!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::Rad
     end
 end
 
-function initialize_X_with_X0!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+function initialize_X_with_X0!(rr::RadauIntegrator{T_object, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_rule_max, N, T_object}
     for i = 1:n_stage
         LinearAlgebra.BLAS.blascopy!(N, x0, 1, rr.ct.X_stage[i], 1)
     end
     return nothing
 end
 
-function updateFX!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, t::Float64) where {n_stage, n_stage_max, N, T_object}
+function updateFX!(rr::RadauIntegrator{T_object, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, t::Float64) where {n_stage, n_rule_max, N, T_object}
     for i = 1:n_stage
         time_stage = table.c[i] * rr.step.h + t
         rr.de_object.de(rr.ct.F_X_stage[i], rr.ct.X_stage[i], rr.de_object, time_stage)
     end
     return nothing
 end
-function calcEw!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_stage_max, N, T_object}
+function calcEw!(rr::RadauIntegrator{T_object, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}) where {n_stage, n_rule_max, N, T_object}
     residual = 0.0
     for i = 1:n_stage
         # rr.cv.store_float .= rr.ct.X_stage[i] - x0 - rr.step.h * sum( rr.A[i, j] * rr.ct.F_X_stage[j])
@@ -92,14 +79,14 @@ function calcEw!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTabl
         end
         residual += dot(rr.cv.store_float, rr.cv.store_float)
         for j = 1:n_stage
-            # rr.ct.Ew_stage[j] .+= (rr.step.h⁻¹ * rr.λ[j] * rr.inv_T[j, i]) * rr.cv.store_float
-            coefficient = rr.step.h⁻¹[1] * table.λ[j] * table.inv_T[j, i]
+            # rr.ct.Ew_stage[j] .+= (rr.step.h⁻¹ * rr.λ[j] * rr.T⁻¹[j, i]) * rr.cv.store_float
+            coefficient = rr.step.h⁻¹[1] * table.λ[j] * table.T⁻¹[j, i]
             LinearAlgebra.BLAS.axpy!(coefficient, rr.cv.store_float, rr.ct.Ew_stage[j])
         end
     end
     return residual
 end
-function updateInvC!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::RadauTable{n_stage}) where {n_stage, n_stage_max, N, T_object}
+function updateInvC!(rr::RadauIntegrator{T_object, N, n_rule_max}, table::RadauTable{n_stage}) where {n_stage, n_rule_max, N, T_object}
     for i = 1:n_stage
         rr.ct.inv_C_stage[i] .= rr.cv.neg_J
         for k = 1:N
@@ -111,7 +98,7 @@ function updateInvC!(rr::RadauIntegrator{T_object, N, n_stage_max}, table::Radau
     end
     return nothing
 end
-function updateStageX!(rr::RadauIntegrator{T_object, N, n_stage_max},  table::RadauTable{n_stage}) where {n_stage, n_stage_max, N, T_object}
+function updateStageX!(rr::RadauIntegrator{T_object, N, n_rule_max},  table::RadauTable{n_stage}) where {n_stage, n_rule_max, N, T_object}
     for i = 1:n_stage
         ### NOTE: Negative sign taken care of when update X_stage ###
         # rr.cv.store_complex .= rr.ct.inv_C_stage[i] * rr.ct.Ew_stage[i]

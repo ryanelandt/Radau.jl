@@ -16,7 +16,7 @@ my_stiff_struct = SimpleStiffSystem(stiff_de!)
 
 x0 = zeros(Float64, 4) .+ 1.0
 rr = makeRadauIntegrator(x0, 1.0e-16, my_stiff_struct, 2)
-rr.order.s = 3
+rr.rule.s = 2
 t_final = 0.2
 update_h!(rr, t_final)
 

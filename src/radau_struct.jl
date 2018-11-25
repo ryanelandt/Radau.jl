@@ -1,3 +1,4 @@
+
 struct RadauVectorCache{n_stage, NX, NC}
     seed::NTuple{NC, ForwardDiff.Partials{NC, Float64}}
     store_float::Vector{Float64}
@@ -37,32 +38,20 @@ end
 struct RadauTable{n_stage}
     A::Matrix{Float64}
     c::NTuple{n_stage,Float64}
-    inv_A::Matrix{Float64}
     λ::Vector{ComplexF64}
     T::Matrix{ComplexF64}
-    inv_T::Matrix{ComplexF64}
+    T⁻¹::Matrix{ComplexF64}
     bi::Matrix{Float64}
     b̂::Vector{Float64}
     b̂_0::Float64
-    function RadauTable{n_stage_}() where {n_stage_}
-        (0 <= n_stage_) || error("radau_rule stage number needs to be positive, but is $radau_rule")
-        (n_stage_ <= 7) || error("are you sure that you want a RadauIIA rule with $radau_rule stages (order $(2*radau_rule - 1))?")
+    function RadauTable(n_rule::Int64)
+        (0 <= n_rule) || error("radau_rule stage number needs to be positive, but is $n_rule")
+        (n_rule <= 6) || error("RadauIIA rule $n_rule with $(radau_rule_to_stage(n_rule)) stages of order $(radau_rule_to_order(n_rule)) not implemented")
 
-        A, b, c, bi, b̂ = radau_butcher_table_plus(n_stage_)
-        inv_A = inv(A)
-        λ, T = big_eigen(inv_A)
-        inv_T = inv(T)
+        A, b, c, λ, T, T⁻¹, bi, b̂, b̂_0 = load_radau_table_from_file(n_rule)
 
-        A = Float64.(A)
-        c = Float64.(c)
-        inv_A = Float64.(inv_A)
-        λ = Complex{Float64}.(λ)
-        T = Complex{Float64}.(T)
-        inv_T = Complex{Float64}.(inv_T)
-
-        c = Tuple(c)
-
-        return new(A, c, inv_A, λ, T, inv_T, bi, b̂[2:end], b̂[1])
+        n_stages = radau_rule_to_stage(n_rule)
+        return new{n_stages}(A, c, λ, T, T⁻¹, bi, b̂, b̂_0)
     end
 end
 
@@ -83,7 +72,7 @@ mutable struct RadauStep
     end
 end
 
-mutable struct RadauOrder
+mutable struct RadauRule
     s::Int64
     n_increase_cooldown::Int64
     θ::Float64
@@ -91,8 +80,8 @@ mutable struct RadauOrder
     k_iter::Int64
     k_iter_max::Int64
     Ψ_k::Float64
-    max_stage::Int64
-    function RadauOrder()
+    max_rule::Int64
+    function RadauRule()
         return new(1, 10, -9999.0, -9999.0, -9999, 15, 9999.0, 3)
     end
 end
@@ -108,21 +97,21 @@ mutable struct RadauDenseOutput{n_stage}
     end
 end
 
-struct RadauIntegrator{T_object, NX, n_stage_max, NC}
-    table::NTuple{n_stage_max, RadauTable}
+struct RadauIntegrator{T_object, NX, n_rule_max, NC}
+    table::NTuple{n_rule_max, RadauTable}
     step::RadauStep
-    order::RadauOrder
-    dense::RadauDenseOutput{n_stage_max}
-    cv::RadauVectorCache{n_stage_max,NX,NC}
-    ct::RadauCacheTuple{n_stage_max,NX}
+    rule::RadauRule
+    dense::RadauDenseOutput{n_rule_max}
+    cv::RadauVectorCache{n_rule_max,NX,NC}
+    ct::RadauCacheTuple{n_rule_max,NX}
     de_object::T_object
-    function RadauIntegrator{T_object_, NX, n_stage_max_, NC}(tol::Float64, de_object_::T_object_) where {T_object_, NX, n_stage_max_, NC}
-        table_ = Tuple([RadauTable{k}() for k = 1:3])
-        cv_ = RadauVectorCache{n_stage_max_,NX,NC}()
-        ct_ = RadauCacheTuple{n_stage_max_,NX}()
+    function RadauIntegrator{T_object_, NX, n_rule_max_, NC}(tol::Float64, de_object_::T_object_) where {T_object_, NX, n_rule_max_, NC}
+        table_ = Tuple([RadauTable(k) for k = 1:3])
+        cv_ = RadauVectorCache{n_rule_max_,NX,NC}()
+        ct_ = RadauCacheTuple{n_rule_max_,NX}()
         radau_step = RadauStep(tol_newton=tol)
-        radau_order = RadauOrder()
-        dense = RadauDenseOutput{n_stage_max_}(NX)
-        return new(table_, radau_step, radau_order, dense, cv_, ct_, de_object_)
+        radau_rule = RadauRule()
+        dense = RadauDenseOutput{n_rule_max_}(NX)
+        return new(table_, radau_step, radau_rule, dense, cv_, ct_, de_object_)
     end
 end
