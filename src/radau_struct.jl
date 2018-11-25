@@ -1,13 +1,12 @@
-
-struct RadauVectorCache{n_stage, NX, NC}
-    seed::NTuple{NC, ForwardDiff.Partials{NC, Float64}}
+struct RadauVectorCache{n_stage,NX,NC}
+    seed::NTuple{NC,ForwardDiff.Partials{NC,Float64}}
     store_float::Vector{Float64}
     store_complex::Vector{ComplexF64}
     neg_J::Matrix{Float64}
     x_dual::Vector{ForwardDiff.Dual{Nothing,Float64,NC}}
     xx_dual::Vector{ForwardDiff.Dual{Nothing,Float64,NC}}
     xx_0::Vector{Float64}
-    function RadauVectorCache{n_stage_, NX, NC}() where {n_stage_, NX, NC}
+    function RadauVectorCache{n_stage_,NX,NC}() where {n_stage_,NX,NC}
         seed_  = ForwardDiff.construct_seeds(ForwardDiff.Partials{NC,Float64})
         store_float_ = Vector{Float64}(undef, NX)
         store_complex_ = Vector{ComplexF64}(undef, NX)
@@ -20,12 +19,12 @@ struct RadauVectorCache{n_stage, NX, NC}
 end
 
 struct RadauCacheTuple{n_stage,NX}
-    Ew_stage::NTuple{n_stage, Vector{ComplexF64}}
-    delta_Z_stage::NTuple{n_stage, Vector{ComplexF64}}
-    X_stage::NTuple{n_stage, Vector{Float64}}
-    F_X_stage::NTuple{n_stage, Vector{Float64}}
-    inv_C_stage::NTuple{n_stage, Matrix{ComplexF64}}
-    function RadauCacheTuple{n_stage_, NX}() where {n_stage_, NX}
+    Ew_stage::NTuple{n_stage,Vector{ComplexF64}}
+    delta_Z_stage::NTuple{n_stage,Vector{ComplexF64}}
+    X_stage::NTuple{n_stage,Vector{Float64}}
+    F_X_stage::NTuple{n_stage,Vector{Float64}}
+    inv_C_stage::NTuple{n_stage,Matrix{ComplexF64}}
+    function RadauCacheTuple{n_stage_,NX}() where {n_stage_,NX}
         Ew_stage_ = Tuple(Vector{ComplexF64}(undef, NX) for _ = 1:n_stage_)
         delta_Z_stage_ = Tuple(Vector{ComplexF64}(undef, NX) for _ = 1:n_stage_)
         X_stage_ = Tuple(Vector{Float64}(undef, NX) for _ = 1:n_stage_)
@@ -90,28 +89,29 @@ mutable struct RadauDenseOutput{n_stage}
     is_has_X::Bool
     h::Float64
     s::Int64
-    X_stage::NTuple{n_stage, Vector{Float64}}
+    X_stage::NTuple{n_stage,Vector{Float64}}
     function RadauDenseOutput{n_stage}(NX) where {n_stage}
         X_stage = Tuple(Vector{Float64}(undef, NX) for _ = 1:n_stage)
         return new(false, -9999.0, -9999, X_stage)
     end
 end
 
-struct RadauIntegrator{T_object, NX, n_rule_max, NC}
-    table::NTuple{n_rule_max, RadauTable}
+struct RadauIntegrator{T_object,NX,NC,NR,NSM}
+    table::NTuple{NR,RadauTable}
     step::RadauStep
     rule::RadauRule
-    dense::RadauDenseOutput{n_rule_max}
-    cv::RadauVectorCache{n_rule_max,NX,NC}
-    ct::RadauCacheTuple{n_rule_max,NX}
+    dense::RadauDenseOutput{NSM}
+    cv::RadauVectorCache{NSM,NX,NC}
+    ct::RadauCacheTuple{NSM,NX}
     de_object::T_object
-    function RadauIntegrator{T_object_, NX, n_rule_max_, NC}(tol::Float64, de_object_::T_object_) where {T_object_, NX, n_rule_max_, NC}
-        table_ = Tuple([RadauTable(k) for k = 1:3])
-        cv_ = RadauVectorCache{n_rule_max_,NX,NC}()
-        ct_ = RadauCacheTuple{n_rule_max_,NX}()
+    function RadauIntegrator{NX,NC,NR,NSM}(tol::Float64, de_object_::T_object_) where {T_object_,NX,NC,NR,NSM}
+        table_ = Tuple([RadauTable(k) for k = 1:NR])
+        n_stage_max_ = radau_rule_to_stage(NR)
+        cv_ = RadauVectorCache{n_stage_max_,NX,NC}()
+        ct_ = RadauCacheTuple{n_stage_max_,NX}()
         radau_step = RadauStep(tol_newton=tol)
         radau_rule = RadauRule()
-        dense = RadauDenseOutput{n_rule_max_}(NX)
-        return new(table_, radau_step, radau_rule, dense, cv_, ct_, de_object_)
+        dense = RadauDenseOutput{n_stage_max_}(NX)
+        return new{T_object_,NX,NC,NR,NSM}(table_, radau_step, radau_rule, dense, cv_, ct_, de_object_)
     end
 end

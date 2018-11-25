@@ -1,12 +1,12 @@
 
-function solveRadau(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}, t::Float64=0.0) where {n_stage_max, N, T_object}
+function solveRadau(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Float64}, t::Float64=0.0) where {T_object,NX,NC,NR,NSM}
     table = rr.table[rr.rule.s]
     calcJacobian!(rr, x0, t)
     return solveRadau_inner(rr, x0, table, t)
 end
 
-function solveRadau_inner(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64},
-        table::RadauTable{n_stage}, t::Float64=0.0) where {n_stage_max, N, T_object, n_stage}
+function solveRadau_inner(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Float64},
+        table::RadauTable{NS}, t::Float64=0.0) where {T_object,NX,NC,NR,NSM,NS}
 
     is_converge = simple_newton(rr, x0, table, t)
     update_x_err_norm!(rr, table, x0)
@@ -27,8 +27,8 @@ function solveRadau_inner(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vec
     end
 end
 
-function simple_newton(rr::RadauIntegrator{T_object, N, n_stage_max}, x0::Vector{Float64}, table::RadauTable{n_stage},
-        t::Float64=0.0) where {n_stage_max, N, T_object, n_stage}
+function simple_newton(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Float64}, table::RadauTable{NS},
+        t::Float64=0.0) where {T_object,NX,NC,NR,NSM,NS}
 
     # TODO: get rid of residual__ and replace with rr.rule.θ
 
