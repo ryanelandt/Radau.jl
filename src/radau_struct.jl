@@ -80,8 +80,8 @@ mutable struct RadauRule
     k_iter_max::Int64
     Ψ_k::Float64
     max_rule::Int64
-    function RadauRule()
-        return new(1, 10, -9999.0, -9999.0, -9999, 15, 9999.0, 3)
+    function RadauRule(NR::Int64)
+        return new(1, 10, -9999.0, -9999.0, -9999, 15, 9999.0, NR)
     end
 end
 
@@ -110,7 +110,7 @@ struct RadauIntegrator{T_object,NX,NC,NR,NSM}
         cv_ = RadauVectorCache{n_stage_max_,NX,NC}()
         ct_ = RadauCacheTuple{n_stage_max_,NX}()
         radau_step = RadauStep(tol_newton=tol)
-        radau_rule = RadauRule()
+        radau_rule = RadauRule(NR)
         dense = RadauDenseOutput{n_stage_max_}(NX)
         return new{T_object_,NX,NC,NR,NSM}(table_, radau_step, radau_rule, dense, cv_, ct_, de_object_)
     end
