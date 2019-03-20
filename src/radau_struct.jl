@@ -66,8 +66,9 @@ mutable struct RadauStep
     x_err_normᵏ⁺¹::Float64
     h_max::Float64
     h_min::Float64
+    exit_flag::Int64
     function RadauStep(;h=1.0e-4, tol_a=1.0e-4, tol_r=1.0e-4, tol_newton=1.0e-16)
-        return new(h, 1 / h, tol_a, tol_r, tol_newton, false, -9999.0, -9999.0, -9999.0, 0.01, 1.0e-8)
+        return new(h, 1 / h, tol_a, tol_r, tol_newton, false, -9999.0, -9999.0, -9999.0, 0.01, 1.0e-8, -9999)
     end
 end
 

@@ -27,6 +27,21 @@ function solveRadau_inner(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector
     end
 end
 
+# function print_exit_flag(rr::RadauIntegrator)
+#     exit_flag = rr.step.exit_flag
+#     (exit_flag == -9999) && println("never run")
+#     (exit_flag == 0) && println("step successfull")
+#     (exit_flag == 1) && println("iteration limit exceeded")
+#     (exit_flag == 2) && println("tolerance failure")
+#     (exit_flag == 3) && println("divergence")
+# end
+#
+# @inline set_exit_flag_success(rr::RadauIntegrator) = (rr.step.exit_flag = 0)
+# @inline set_exit_flag_fail_iter(rr::RadauIntegrator) = (rr.step.exit_flag = 1)
+# @inline set_exit_flag_fail_tol(rr::RadauIntegrator) = (rr.step.exit_flag = 2)
+# @inline set_exit_flag_fail_diverge(rr::RadauIntegrator) = (rr.step.exit_flag = 3)
+
+
 function simple_newton(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Float64}, table::RadauTable{NS},
         t::Float64=0.0) where {T_object,NX,NC,NR,NSM,NS}
 
@@ -46,6 +61,7 @@ function simple_newton(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Fl
         residual__ = calcEw!(rr, table, x0)
         updateStageX!(rr, table)
         if residual__ < rr.step.tol_newton
+            set_exit_flag_success(rr)
             update_dense_successful!(rr, table)
             return true
         end
@@ -61,10 +77,12 @@ function simple_newton(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Fl
         residual_prev = residual__  # update residual
         res_vec = SVector{3,Float64}(residual__, res_vec[1], res_vec[2])
         if res_vec[3] < res_vec[2] < res_vec[1]  # two consequitive issues
+            set_exit_flag_fail_diverge(rr)
             update_dense_unsuccessful!(rr)
             return false
         end
     end
+    set_exit_flag_fail_iter(rr)
     update_dense_unsuccessful!(rr)
     return false  # exceeded iteration limit
 end
