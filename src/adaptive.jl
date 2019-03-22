@@ -45,24 +45,33 @@ function calc_h_new_estimate_1(rr::RadauIntegrator{TO, N, n_rule_max}, table::Ra
     return fac * rr.step.h * term_1
 end
 
-function predictive_correction(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}) where {n_stage, n_rule_max, N, TO}
-    # Implements second half of part of 8.25
+# function predictive_correction(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}) where {n_stage, n_rule_max, N, TO}
+#     # Implements second half of part of 8.25
+#
+#     # an x_err_norm can be 0.0 if the equation is integratable EXACTLY
+#     if 0.0 == rr.step.x_err_normᵏ⁺¹  # things went well let's keep it that way
+#         return 1.0
+#     elseif rr.step.x_err_norm == 0.0  # things got much much worse let's drastically reduce step size in anticipation
+#         return 0.1
+#     else
+#         ratio_h = rr.step.h / rr.step.hᵏ⁻¹
+#         ratio_x_err_norm = rr.step.x_err_norm / rr.step.x_err_normᵏ⁺¹
+#         pred_corr = ratio_h * (ratio_x_err_norm)^get_exponent(table)
+#         return clamp(pred_corr, 0.1, 1.0)  # otherwise prediction will be WAY too pessimistic
+#     end
+# end
 
-    # an x_err_norm can be 0.0 if the equation is integratable EXACTLY
-    if 0.0 == rr.step.x_err_normᵏ⁺¹  # things went well let's keep it that way
-        return 1.0
-    elseif rr.step.x_err_norm == 0.0  # things got much much worse let's drastically reduce step size in anticipation
-        return 0.1
-    else
-        ratio_h = rr.step.h / rr.step.hᵏ⁻¹
-        ratio_x_err_norm = rr.step.x_err_norm / rr.step.x_err_normᵏ⁺¹
-        pred_corr = ratio_h * (ratio_x_err_norm)^get_exponent(table)
-        return clamp(pred_corr, 0.1, 1.0)  # otherwise prediction will be WAY too pessimistic
-    end
+function calc_and_update_h!(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, is_converge::Bool) where {n_stage, n_rule_max, N, TO}
+    if is_converge
+
+
+
+    h_new = (1 / rr.step.x_err_normᵏ⁺¹) ^ get_exponent(table)
 end
 
 function calc_h_new(rr::RadauIntegrator{TO, N, n_rule_max}, table::RadauTable{n_stage}, x0::Vector{Float64}, is_converge::Bool) where {n_stage, n_rule_max, N, TO}
     if is_converge
+
         h_est¹ = calc_h_new_estimate_1(rr, table)
         h_new = h_est¹
 
