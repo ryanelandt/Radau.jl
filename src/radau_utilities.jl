@@ -19,7 +19,8 @@ function get_X_final(rr::RadauIntegrator{T_object, N, n_stage_max}, table::Radau
     return rr.ct.X_stage[n_stage] * 1.0
 end
 
-get_exponent(table::RadauTable{n_stage}) where {n_stage} = 1 / (1 + n_stage)
+@inline get_exponent(table::RadauTable{n_stage}) where {n_stage} = 1 / (1 + n_stage)
+@inline get_h(rr::RadauIntegrator) = rr.step.h
 
 @inline function get_table_from_current_s(rr::RadauIntegrator{T_object, N, n_stage_max}) where {n_stage_max, N, T_object}
     return rr.table[rr.rule.s]
@@ -28,11 +29,15 @@ end
 function print_exit_flag(rr::RadauIntegrator)
     exit_flag = rr.step.exit_flag
     (exit_flag == -9999) && println("never run")
-    (exit_flag == 0) && println("step successfull")
     (exit_flag == 1) && println("iteration limit exceeded")
     (exit_flag == 2) && println("tolerance failure")
+    (exit_flag == 3) && println("newton divergence")
+    is_exit_flag_success(rr) && println("step successful")
 end
 
 @inline set_exit_flag_success(rr::RadauIntegrator) = (rr.step.exit_flag = 0)
 @inline set_exit_flag_fail_iter(rr::RadauIntegrator) = (rr.step.exit_flag = 1)
 @inline set_exit_flag_fail_tol(rr::RadauIntegrator) = (rr.step.exit_flag = 2)
+@inline set_exit_flag_fail_diverge(rr::RadauIntegrator) = (rr.step.exit_flag = 3)
+
+@inline is_exit_flag_success(rr::RadauIntegrator) = (rr.step.exit_flag == 0)

@@ -42,6 +42,7 @@ export
     makeRadauIntegrator,
     get_X_final,
     get_exponent,
+    print_exit_flag,
 
     # radau_solve.jl
     solveRadau,

@@ -8,12 +8,14 @@ end
 function solveRadau_inner(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Float64},
         table::RadauTable{NS}, t::Float64=0.0) where {T_object,NX,NC,NR,NSM,NS}
 
-    is_converge = simple_newton(rr, x0, table, t)
-    update_x_err_norm!(rr, table, x0)
-    h_new = calc_h_new(rr, table, x0, is_converge)
-    update_h!(rr, h_new)  # TODO: move this and the above line into one function
-    update_rule!(rr, is_converge)
-    if is_converge
+    simple_newton!(rr, x0, table, t)
+    # update_x_err_norm!(rr, table, x0)
+    calc_and_update_h!(rr, table, x0)
+    update_rule!(rr)
+    # h_new = calc_h_new(rr, table, x0, is_converge)
+    # update_h!(rr, h_new)  # TODO: move this and the above line into one function
+    # update_rule!(rr, is_converge)
+    if is_exit_flag_success(rr)
         x_final = get_X_final(rr, table)
         h_taken = rr.step.hᵏ⁻¹
         return rr.step.hᵏ⁻¹, x_final, t + h_taken  # step actually taken, x_final
@@ -42,7 +44,7 @@ end
 # @inline set_exit_flag_fail_diverge(rr::RadauIntegrator) = (rr.step.exit_flag = 3)
 
 
-function simple_newton(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Float64}, table::RadauTable{NS},
+function simple_newton!(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Float64}, table::RadauTable{NS},
         t::Float64=0.0) where {T_object,NX,NC,NR,NSM,NS}
 
     # TODO: get rid of residual__ and replace with rr.rule.θ
@@ -63,7 +65,9 @@ function simple_newton(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Fl
         if residual__ < rr.step.tol_newton
             set_exit_flag_success(rr)
             update_dense_successful!(rr, table)
-            return true
+            update_x_err_norm!(rr, table, x0)
+            return nothing
+            # return true
         end
 
         if k_iter != 1
@@ -79,10 +83,12 @@ function simple_newton(rr::RadauIntegrator{T_object,NX,NC,NR,NSM}, x0::Vector{Fl
         if res_vec[3] < res_vec[2] < res_vec[1]  # two consequitive issues
             set_exit_flag_fail_diverge(rr)
             update_dense_unsuccessful!(rr)
-            return false
+            return nothing
+            # return false
         end
     end
     set_exit_flag_fail_iter(rr)
     update_dense_unsuccessful!(rr)
-    return false  # exceeded iteration limit
+    return nothing
+    # return false  # exceeded iteration limit
 end
