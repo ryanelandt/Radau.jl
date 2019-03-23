@@ -51,10 +51,8 @@ export
     calc_x̂_minus_x,
     calc_x_err_norm,
     update_x_err_norm!,
-    calc_h_new,
     update_h!,
     calc_h_new_estimate_1,
-    predictive_correction,
 
     # interpolate.jl
     interpolate_output!
