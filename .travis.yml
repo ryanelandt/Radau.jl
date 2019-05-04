@@ -15,7 +15,7 @@ matrix:
   allow_failures:
     - julia: nightly
 before_script:
-  - julia -e 'import Pkg; repo = Pkg.Types.GitRepo("https://github.com/andreasnoack/GenericLinearAlgebra.jl.git", "master"); Pkg.add(Pkg.Types.PackageSpec(repo))'
+#  - julia -e 'import Pkg; repo = Pkg.Types.GitRepo("https://github.com/andreasnoack/GenericLinearAlgebra.jl.git", "master"); Pkg.add(Pkg.Types.PackageSpec(repo))'
 #     - os: osx
 # uncomment the following lines to override the default test script
 #script:
